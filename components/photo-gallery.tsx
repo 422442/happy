@@ -19,21 +19,18 @@ export default function PhotoGallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [direction, setDirection] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024)
-
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth)
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+  const [dragOffset, setDragOffset] = useState(0)
 
   const goToNext = useCallback(() => {
+    setDirection(1)
     setSelectedPhoto((prev) => (prev + 1) % photos.length)
   }, [])
 
   const goToPrev = useCallback(() => {
+    setDirection(-1)
     setSelectedPhoto((prev) => (prev - 1 + photos.length) % photos.length)
   }, [])
 
@@ -74,200 +71,189 @@ export default function PhotoGallery() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return
     const diff = e.clientX - startX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) goToPrev()
-      else goToNext()
-      setIsDragging(false)
-    }
+    setDragOffset(diff)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return
     const diff = e.touches[0].clientX - startX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) goToPrev()
-      else goToNext()
-      setIsDragging(false)
-    }
+    setDragOffset(diff)
   }
 
-  const handleMouseUp = () => setIsDragging(false)
-
-  const getCardDimensions = () => {
-    if (windowWidth < 768) {
-      return { width: 280, height: 460, translateZ: 500 }
-    } else if (windowWidth < 1024) {
-      return { width: 350, height: 580, translateZ: 700 }
-    } else {
-      return { width: 420, height: 680, translateZ: 900 }
+  const handleDragEnd = () => {
+    if (!isDragging) return
+    
+    if (Math.abs(dragOffset) > 50) {
+      if (dragOffset > 0) {
+        goToPrev()
+      } else {
+        goToNext()
+      }
     }
+    
+    setIsDragging(false)
+    setDragOffset(0)
+    setStartX(0)
   }
-
-  const cardDimensions = getCardDimensions()
 
   return (
     <>
-      <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto overflow-hidden">
+      <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
         <h3 className="text-4xl md:text-5xl font-bold text-center text-primary mb-4">Cherished Moments</h3>
         <p className="text-center text-muted-foreground mb-12 text-lg">A journey through our beautiful memories</p>
 
         <div className="relative group">
+          {/* Main Slideshow */}
           <div
-            className="relative h-[600px] md:h-[750px] lg:h-[850px] cursor-grab active:cursor-grabbing"
-            style={{ perspective: "2000px" }}
+            className="relative h-[600px] md:h-[700px] lg:h-[750px] overflow-hidden rounded-2xl bg-muted/30"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
-            onTouchEnd={handleMouseUp}
+            onTouchEnd={handleDragEnd}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="relative w-full h-full transition-transform duration-700 ease-out"
-                style={{
-                  transformStyle: "preserve-3d",
-                  transform: `rotateY(${selectedPhoto * -(360 / photos.length)}deg)`,
-                }}
-              >
-                {photos.map((photo, index) => {
-                  const angle = (360 / photos.length) * index
-                  const isActive = index === selectedPhoto
+              {photos.map((photo, index) => {
+                const offset = index - selectedPhoto
+                const isActive = index === selectedPhoto
+                const isPrev = index === (selectedPhoto - 1 + photos.length) % photos.length
+                const isNext = index === (selectedPhoto + 1) % photos.length
+                
+                let translateX = offset * 100
+                let scale = 0.8
+                let opacity = 0
+                let zIndex = 0
 
-                  const distance = Math.min(
-                    Math.abs(index - selectedPhoto),
-                    photos.length - Math.abs(index - selectedPhoto),
-                  )
-                  const opacity = distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3
+                if (isActive) {
+                  translateX = 0
+                  scale = 1
+                  opacity = 1
+                  zIndex = 30
+                } else if (isPrev) {
+                  translateX = -100
+                  scale = 0.85
+                  opacity = 0.4
+                  zIndex = 20
+                } else if (isNext) {
+                  translateX = 100
+                  scale = 0.85
+                  opacity = 0.4
+                  zIndex = 20
+                } else if (offset < 0) {
+                  translateX = -120
+                  scale = 0.7
+                  opacity = 0
+                  zIndex = 10
+                } else {
+                  translateX = 120
+                  scale = 0.7
+                  opacity = 0
+                  zIndex = 10
+                }
 
-                  return (
-                    <div
-                      key={photo.id}
-                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
-                      style={{
-                        transformStyle: "preserve-3d",
-                        transform: `rotateY(${angle}deg) translateZ(${cardDimensions.translateZ}px)`,
-                        opacity,
-                      }}
-                    >
-                      <Card
-                        className={`overflow-hidden bg-card border-2 transition-all duration-700 ${
-                          isActive ? "border-primary shadow-2xl shadow-primary/50" : "border-primary/20 shadow-xl"
-                        }`}
-                        style={{
-                          width: `${cardDimensions.width}px`,
-                          height: `${cardDimensions.height}px`,
-                          transform: `rotateY(${-angle}deg)`,
-                        }}
-                      >
-                        <div className="relative w-full h-full bg-background">
-                          <div className="absolute inset-0">
-                            <Image
-                              src={photo.src || "/placeholder.svg"}
-                              alt={photo.alt}
-                              fill
-                              sizes={`${cardDimensions.width}px`}
-                              className="object-contain"
-                              priority={distance <= 1}
-                            />
+                if (isDragging && isActive) {
+                  translateX = (dragOffset / window.innerWidth) * 100
+                }
+
+                return (
+                  <div
+                    key={photo.id}
+                    className="absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out"
+                    style={{
+                      transform: `translateX(${translateX}%) scale(${scale})`,
+                      opacity,
+                      zIndex,
+                      pointerEvents: isActive ? 'auto' : 'none',
+                    }}
+                  >
+                    <Card className="relative w-full max-w-md h-[90%] overflow-hidden border-2 border-primary/20 shadow-2xl">
+                      <div className="relative w-full h-full bg-background">
+                        <Image
+                          src={photo.src || "/placeholder.svg"}
+                          alt={photo.alt}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 500px"
+                          className="object-contain"
+                          priority={Math.abs(offset) <= 1}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+                        {isActive && (
+                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <p className="text-xl md:text-2xl font-semibold">{photo.caption}</p>
+                            <p className="text-sm text-white/80 mt-2">
+                              Photo {index + 1} of {photos.length}
+                            </p>
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        )}
+                      </div>
+                    </Card>
+                  </div>
+                )
+              })}
 
-                          {isActive && (
-                            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-white z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                              <p className="text-lg md:text-xl font-semibold">{photo.caption}</p>
-                              <p className="text-xs md:text-sm text-white/80 mt-1">
-                                Photo {index + 1} of {photos.length}
-                              </p>
-                            </div>
-                          )}
-
-                          {!isActive && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedPhoto(index)
-                                setIsPlaying(false)
-                              }}
-                              className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100"
-                            >
-                              <span className="text-white text-sm font-semibold bg-black/50 px-4 py-2 rounded-full">
-                                View
-                              </span>
-                            </button>
-                          )}
-                        </div>
-                      </Card>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
 
+            {/* Navigation Buttons */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
+              onClick={() => {
                 goToPrev()
                 setIsPlaying(false)
               }}
-              className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm z-20 opacity-0 group-hover:opacity-100 transition-all duration-300"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm z-40 transition-all duration-300"
             >
               <ChevronLeft className="h-6 w-6 md:h-8 md:w-8" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
+              onClick={() => {
                 goToNext()
                 setIsPlaying(false)
               }}
-              className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm z-20 opacity-0 group-hover:opacity-100 transition-all duration-300"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 h-12 w-12 md:h-14 md:w-14 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm z-40 transition-all duration-300"
             >
               <ChevronRight className="h-6 w-6 md:h-8 md:w-8" />
             </Button>
 
-            <div className="absolute top-4 right-4 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {/* Control Buttons */}
+            <div className="absolute top-4 right-4 flex gap-2 z-40">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsPlaying(!isPlaying)
-                }}
-                className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm"
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="h-10 w-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
               >
                 {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsFullscreen(true)
-                }}
-                className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm"
+                onClick={() => setIsFullscreen(true)}
+                className="h-10 w-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
               >
                 <Maximize2 className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {/* Dots Indicator */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-40">
               {photos.map((_, index) => (
                 <button
                   key={index}
-                  onClick={(e) => {
-                    e.stopPropagation()
+                  onClick={() => {
+                    setDirection(index > selectedPhoto ? 1 : -1)
                     setSelectedPhoto(index)
                     setIsPlaying(false)
                   }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     selectedPhoto === index
                       ? "w-8 bg-primary shadow-lg shadow-primary/50"
-                      : "w-2 bg-white/30 hover:bg-white/50 backdrop-blur-sm"
+                      : "w-2 bg-white/40 hover:bg-white/60 backdrop-blur-sm"
                   }`}
                   aria-label={`Go to photo ${index + 1}`}
                 />
@@ -275,18 +261,20 @@ export default function PhotoGallery() {
             </div>
           </div>
 
-          <div className="mt-8 relative">
+          {/* Thumbnail Navigation */}
+          <div className="mt-8">
             <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-2">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}
                   onClick={() => {
+                    setDirection(index > selectedPhoto ? 1 : -1)
                     setSelectedPhoto(index)
                     setIsPlaying(false)
                   }}
-                  className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden transition-all duration-300 snap-center ${
+                  className={`relative flex-shrink-0 w-20 h-32 md:w-24 md:h-36 rounded-xl overflow-hidden transition-all duration-300 snap-center ${
                     selectedPhoto === index
-                      ? "ring-4 ring-primary scale-110 shadow-xl shadow-primary/50"
+                      ? "ring-4 ring-primary scale-105 shadow-xl shadow-primary/50"
                       : "ring-2 ring-border/50 hover:ring-primary/50 hover:scale-105 opacity-60 hover:opacity-100"
                   }`}
                 >
@@ -299,7 +287,7 @@ export default function PhotoGallery() {
         </div>
 
         <p className="text-center text-muted-foreground mt-8 text-sm">
-          Drag to rotate • Arrow keys to navigate • Space to play/pause
+          Drag to slide • Arrow keys to navigate • Space to play/pause
         </p>
       </section>
 
