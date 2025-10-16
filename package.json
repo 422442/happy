@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.1.0",
     "@vercel/analytics": "latest",
     "canvas-confetti": "latest",
     "class-variance-authority": "^0.7.1",
@@ -22,6 +23,7 @@
     "tw-animate-css": "latest"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
     "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^22",
     "@types/react": "^19",
