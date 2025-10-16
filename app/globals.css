@@ -4,25 +4,25 @@
 @import "tw-animate-css";
 
 :root {
-  /* Updated theme to match elegant birthday design with soft golds, rose pinks, deep navy, and cream */
-  --background: oklch(0.18 0.02 280);
-  --foreground: oklch(0.97 0.01 60);
-  --card: oklch(0.22 0.02 280);
-  --card-foreground: oklch(0.97 0.01 60);
-  --popover: oklch(0.22 0.02 280);
-  --popover-foreground: oklch(0.97 0.01 60);
+  /* Updated theme to match elegant birthday design with soft golds, rose pinks, and light backgrounds */
+  --background: oklch(0.98 0.01 60);
+  --foreground: oklch(0.2 0.02 280);
+  --card: oklch(0.99 0.005 60);
+  --card-foreground: oklch(0.2 0.02 280);
+  --popover: oklch(0.99 0.005 60);
+  --popover-foreground: oklch(0.2 0.02 280);
   --primary: oklch(0.75 0.12 25);
   --primary-foreground: oklch(0.18 0.02 280);
   --secondary: oklch(0.68 0.15 350);
   --secondary-foreground: oklch(0.97 0.01 60);
-  --muted: oklch(0.28 0.02 280);
-  --muted-foreground: oklch(0.65 0.01 60);
+  --muted: oklch(0.95 0.01 60);
+  --muted-foreground: oklch(0.45 0.01 280);
   --accent: oklch(0.75 0.12 25);
   --accent-foreground: oklch(0.18 0.02 280);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.32 0.02 280);
-  --input: oklch(0.32 0.02 280);
+  --border: oklch(0.88 0.01 280);
+  --input: oklch(0.88 0.01 280);
   --ring: oklch(0.75 0.12 25);
   --chart-1: oklch(0.75 0.12 25);
   --chart-2: oklch(0.68 0.15 350);
@@ -30,13 +30,13 @@
   --chart-4: oklch(0.85 0.08 60);
   --chart-5: oklch(0.72 0.14 40);
   --radius: 0.75rem;
-  --sidebar: oklch(0.22 0.02 280);
-  --sidebar-foreground: oklch(0.97 0.01 60);
+  --sidebar: oklch(0.99 0.005 60);
+  --sidebar-foreground: oklch(0.2 0.02 280);
   --sidebar-primary: oklch(0.75 0.12 25);
   --sidebar-primary-foreground: oklch(0.18 0.02 280);
-  --sidebar-accent: oklch(0.28 0.02 280);
-  --sidebar-accent-foreground: oklch(0.97 0.01 60);
-  --sidebar-border: oklch(0.32 0.02 280);
+  --sidebar-accent: oklch(0.95 0.01 60);
+  --sidebar-accent-foreground: oklch(0.2 0.02 280);
+  --sidebar-border: oklch(0.88 0.01 280);
   --sidebar-ring: oklch(0.75 0.12 25);
 }
 
@@ -86,12 +86,14 @@
 
 /* Added custom animations for birthday website */
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
   }
-  50% {
-    transform: translateY(-20px);
+  33% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(-5deg);
   }
 }
 
@@ -107,14 +109,13 @@
 }
 
 @keyframes sparkle {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0;
-    transform: scale(0);
+    transform: scale(0) rotate(0deg);
   }
   50% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) rotate(180deg);
   }
 }
 
@@ -127,8 +128,26 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
 .animate-fade-in-up {
@@ -136,7 +155,15 @@
 }
 
 .animate-sparkle {
-  animation: sparkle 2s ease-in-out infinite;
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
 }
 
 /* Smooth scrolling */
