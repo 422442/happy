@@ -95,11 +95,11 @@ export default function PhotoGallery() {
 
   const getCardDimensions = () => {
     if (windowWidth < 768) {
-      return { width: 220, height: 380, translateZ: 350 }
+      return { width: 280, height: 460, translateZ: 500 }
     } else if (windowWidth < 1024) {
-      return { width: 260, height: 450, translateZ: 450 }
+      return { width: 350, height: 580, translateZ: 700 }
     } else {
-      return { width: 300, height: 520, translateZ: 550 }
+      return { width: 420, height: 680, translateZ: 900 }
     }
   }
 
@@ -113,8 +113,8 @@ export default function PhotoGallery() {
 
         <div className="relative group">
           <div
-            className="relative h-[500px] md:h-[600px] lg:h-[700px] cursor-grab active:cursor-grabbing"
-            style={{ perspective: "1500px" }}
+            className="relative h-[600px] md:h-[750px] lg:h-[850px] cursor-grab active:cursor-grabbing"
+            style={{ perspective: "2000px" }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -168,7 +168,7 @@ export default function PhotoGallery() {
                               alt={photo.alt}
                               fill
                               sizes={`${cardDimensions.width}px`}
-                              className="object-cover"
+                              className="object-contain"
                               priority={distance <= 1}
                             />
                           </div>
